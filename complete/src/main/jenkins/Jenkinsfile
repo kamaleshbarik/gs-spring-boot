@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+    environment {
+        JAVA_HOME = tool name: 'jdk1.8.0_271', type: 'jdk'
+    }
+    stages {
+        stage('Build') {
+            steps {
+            
+                // Get some code from a GitHub repository
+                git url:'https://github.com/kamaleshbarik/gs-spring-boot.git',
+                branch:'master'
+
+                // Run Maven on a Unix agent.
+                //sh "mvn -Dmaven.test.failure.ignore=true clean package"
+
+                // To run Maven on a Windows agent, use
+                bat '''
+                        cd complete
+                        mvnw package
+                '''
+            }
+
+            post {
+                // If Maven was able to run the tests, even if some of the test
+                // failed, record the test results and archive the jar file.
+                always {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                }
+                success {
+                    archiveArtifacts '**/target/*.jar'
+                }
+            }
+        }
+    }
+}
